@@ -1,0 +1,9 @@
+service:
+  name: image renderer
+  port: 5000
+  tags: 
+    - interface:gRPC
+
+consul:
+  ip: 10.0.0.2
+  port: 8500
