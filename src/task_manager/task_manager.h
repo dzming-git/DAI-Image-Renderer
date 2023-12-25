@@ -40,7 +40,7 @@ class TaskManager::TaskInfo {
 public:
     TaskInfo(int64_t taskId);
     ~TaskInfo();
-    bool setImageHarmonyAddress(std::string ip, std::string port, int64_t loaderArgsHash);
+    bool initImageHarmony(std::string ip, std::string port, int64_t loaderArgsHash);
     bool setTargetDetectionAddress(std::string ip, std::string port);
     bool setImageSize(int w, int h);
     bool start();

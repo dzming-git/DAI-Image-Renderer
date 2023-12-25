@@ -24,6 +24,7 @@ bool TaskManager::addTask(int64_t taskId) {
 		return false;
 	}
 	taskMap[taskId] = new TaskManager::TaskInfo(taskId);
+	return true;
 }
 
 bool TaskManager::deleteTask(int64_t taskId) {
@@ -33,6 +34,7 @@ bool TaskManager::deleteTask(int64_t taskId) {
 	}
 	delete taskMap[taskId];
 	taskMap.erase(taskId);
+	return true;
 }
 
 TaskManager::TaskInfo* TaskManager::getTask(int64_t taskId) {
@@ -46,6 +48,7 @@ TaskManager::TaskInfo* TaskManager::getTask(int64_t taskId) {
 
 TaskManager::TaskInfo::TaskInfo(int64_t taskId): 
 	taskId(taskId),
+	imageHarmonyClient(nullptr),
 	imageWidth(0), 
 	imageHeight(0),
 	taskThread(nullptr),
@@ -69,7 +72,7 @@ TaskManager::TaskInfo::~TaskInfo() {
 	}
 } 
 
-bool TaskManager::TaskInfo::setImageHarmonyAddress(std::string ip, std::string port, int64_t loaderArgsHash) {
+bool TaskManager::TaskInfo::initImageHarmony(std::string ip, std::string port, int64_t loaderArgsHash) {
 	// TODO 缺少输入合法性检测
 	isImageHarmonySet = true;
 	imageHarmonyIp = ip;
@@ -80,10 +83,10 @@ bool TaskManager::TaskInfo::setImageHarmonyAddress(std::string ip, std::string p
 		delete imageHarmonyClient;
 	}
 	imageHarmonyClient = new ImageHarmonyClient();
-	if (imageHarmonyClient->setAddress(imageHarmonyIp, imageHarmonyPort)) {
+	if (!imageHarmonyClient->setAddress(imageHarmonyIp, imageHarmonyPort)) {
 		return false;
 	}
-	if (imageHarmonyClient->setLoaderArgsHash(loaderArgsHash)) {
+	if (!imageHarmonyClient->setLoaderArgsHash(loaderArgsHash)) {
 		return false;
 	}
 	return true;
@@ -119,7 +122,7 @@ bool TaskManager::TaskInfo::start() {
 	taskThread = new std::thread([this](){
 		stopped = false;
         while (!stopRequested) {
-
+			std::cout << "test" << std::endl;
 		}
 		stopped = true;
     });
