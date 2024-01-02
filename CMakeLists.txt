@@ -33,18 +33,18 @@ set(SOURCES
     main.cpp
     src/utils/random_utils.h
     src/utils/random_utils.cpp
-    /workspace/src/grpc/clients/image_harmony/image_harmony_client.h
-    /workspace/src/grpc/clients/image_harmony/image_harmony_client.cpp
-    /workspace/src/grpc/clients/target_detection/target_detection.h
-    /workspace/src/grpc/clients/target_detection/target_detection.cpp
-    /workspace/src/grpc/servers/service_coordinator/service_coordinator_server.h
-    /workspace/src/grpc/servers/service_coordinator/service_coordinator_server.cpp
-    /workspace/src/grpc/servers/grpc_server_builder.h
-    /workspace/src/grpc/servers/grpc_server_builder.cpp
-    /workspace/src/grpc/servers/grpc_server.h
-    /workspace/src/grpc/servers/grpc_server.cpp
-    /workspace/src/task_manager/task_manager.h
-    /workspace/src/task_manager/task_manager.cpp
+    src/grpc/clients/image_harmony/image_harmony_client.h
+    src/grpc/clients/image_harmony/image_harmony_client.cpp
+    src/grpc/clients/target_detection/target_detection_client.h
+    src/grpc/clients/target_detection/target_detection_client.cpp
+    src/grpc/servers/service_coordinator/service_coordinator_server.h
+    src/grpc/servers/service_coordinator/service_coordinator_server.cpp
+    src/grpc/servers/grpc_server_builder.h
+    src/grpc/servers/grpc_server_builder.cpp
+    src/grpc/servers/grpc_server.h
+    src/grpc/servers/grpc_server.cpp
+    src/task_manager/task_manager.h
+    src/task_manager/task_manager.cpp
     )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -55,6 +55,7 @@ target_link_libraries(${PROJECT_NAME}
   consul-cpp
   image_harmony_data_grpc_proto
   service_coordinator_data_grpc_proto
+  target_detection_data_grpc_proto
   )
 
 # OpenCV

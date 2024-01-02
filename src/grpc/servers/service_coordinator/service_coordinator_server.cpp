@@ -17,6 +17,7 @@ grpc::Status ServiceCoordinatorServer::informPreviousServiceInfo(grpc::ServerCon
     std::string responseMessage;
     int64_t taskId = 0;
     bool addTaskFlag = false;
+    request->PrintDebugString();
     try {
         taskId = request->taskid();
         std::unordered_map<std::string, std::string> args;
@@ -45,14 +46,13 @@ grpc::Status ServiceCoordinatorServer::informPreviousServiceInfo(grpc::ServerCon
                 throw std::runtime_error("LoaderArgsHash is not set.\n");
             }
             int64_t loaderArgsHash = std::stoll(args["LoaderArgsHash"]);
-            if (!taskInfo->setImageHarmonyAddress(preServiceIp, preServicePort, loaderArgsHash)) {
+            if (!taskInfo->initImageHarmony(preServiceIp, preServicePort, loaderArgsHash)) {
                 throw std::runtime_error("Failed to set image harmony address. Task ID: " + std::to_string(taskId) + "\n");
             }
         }
         else if ("target detection" == preServiceName) {
-            // TODO 这里缺一个检测器的id
-            if (!taskInfo->setTargetDetectionAddress(preServiceIp, preServicePort)) {
-                throw std::runtime_error("Failed to set target detection address. Task ID: " + std::to_string(taskId) + "\n");
+            if (!taskInfo->initTargetDetection(preServiceIp, preServicePort)) {
+                throw std::runtime_error("Failed to set tarc  get detection address. Task ID: " + std::to_string(taskId) + "\n");
             }
         }
         else {

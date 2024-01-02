@@ -16,7 +16,7 @@
 #include <thread>
 #include <unordered_map>
 #include "grpc/clients/image_harmony/image_harmony_client.h"
-#include "grpc/clients/target_detection/target_detection.h"
+#include "grpc/clients/target_detection/target_detection_client.h"
 
 class TaskManager {
 public:
@@ -41,7 +41,7 @@ public:
     TaskInfo(int64_t taskId);
     ~TaskInfo();
     bool initImageHarmony(std::string ip, std::string port, int64_t loaderArgsHash);
-    bool setTargetDetectionAddress(std::string ip, std::string port);
+    bool initTargetDetection(std::string ip, std::string port);
     bool setImageSize(int w, int h);
     bool start();
     bool stop();
