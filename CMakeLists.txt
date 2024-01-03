@@ -56,6 +56,7 @@ target_link_libraries(${PROJECT_NAME}
   image_harmony_data_grpc_proto
   service_coordinator_data_grpc_proto
   target_detection_data_grpc_proto
+  image_renderer_data_grpc_proto
   )
 
 # OpenCV
