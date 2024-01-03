@@ -24,7 +24,7 @@ public:
     ImageRendererServer();
     virtual ~ImageRendererServer();
 
-    virtual grpc::Status getLatestImageByImageId(grpc::ServerContext*, const imageRenderer::GetImageByImageIdRequest*, imageRenderer::GetImageByImageIdResponse*) override;
+    virtual grpc::Status getImageByImageId(grpc::ServerContext*, const imageRenderer::GetImageByImageIdRequest*, imageRenderer::GetImageByImageIdResponse*) override;
 private:
 };
 

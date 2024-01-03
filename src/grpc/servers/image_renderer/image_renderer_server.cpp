@@ -12,7 +12,7 @@ ImageRendererServer::ImageRendererServer() {
 ImageRendererServer::~ImageRendererServer() {
 }
 
-grpc::Status ImageRendererServer::getLatestImageByImageId(grpc::ServerContext*, const imageRenderer::GetImageByImageIdRequest *request, imageRenderer::GetImageByImageIdResponse *response) {
+grpc::Status ImageRendererServer::getImageByImageId(grpc::ServerContext*, const imageRenderer::GetImageByImageIdRequest *request, imageRenderer::GetImageByImageIdResponse *response) {
     int32_t responseCode = 200;
     std::string responseMessage;
     int64_t taskId = 0;
