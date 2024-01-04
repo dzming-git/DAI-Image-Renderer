@@ -4,8 +4,6 @@
 #include <unordered_map>
 #include "task_manager/task_manager.h"
 
-auto taskManager = TaskManager::getSingletonInstance();
-
 ServiceCoordinatorServer::ServiceCoordinatorServer() {
 }
 
@@ -17,6 +15,7 @@ grpc::Status ServiceCoordinatorServer::informPreviousServiceInfo(grpc::ServerCon
     std::string responseMessage;
     int64_t taskId = 0;
     bool addTaskFlag = false;
+    auto taskManager = TaskManager::getSingletonInstance();
     request->PrintDebugString();
     try {
         taskId = request->taskid();
@@ -94,6 +93,7 @@ grpc::Status ServiceCoordinatorServer::informCurrentServiceInfo(grpc::ServerCont
 grpc::Status ServiceCoordinatorServer::start(grpc::ServerContext*, const serviceCoordinator::StartRequest* request, serviceCoordinator::StartResponse* response) {
     int32_t responseCode = 200;
     std::string responseMessage;
+    auto taskManager = TaskManager::getSingletonInstance();
     try {
         int64_t taskId = request->taskid();
         auto taskInfo = taskManager->getTask(taskId);
@@ -121,6 +121,7 @@ grpc::Status ServiceCoordinatorServer::start(grpc::ServerContext*, const service
 grpc::Status ServiceCoordinatorServer::stop(grpc::ServerContext*, const serviceCoordinator::StopRequest* request, serviceCoordinator::StopResponse* response) {
     int32_t responseCode = 200;
     std::string responseMessage;
+    auto taskManager = TaskManager::getSingletonInstance();
     try {
         int64_t taskId = request->taskid();
         auto taskInfo = taskManager->getTask(taskId);

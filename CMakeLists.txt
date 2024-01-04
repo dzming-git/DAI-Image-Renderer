@@ -39,6 +39,8 @@ set(SOURCES
     src/grpc/clients/target_detection/target_detection_client.cpp
     src/grpc/servers/service_coordinator/service_coordinator_server.h
     src/grpc/servers/service_coordinator/service_coordinator_server.cpp
+    src/grpc/servers/image_renderer/image_renderer_server.h
+    src/grpc/servers/image_renderer/image_renderer_server.cpp
     src/grpc/servers/grpc_server_builder.h
     src/grpc/servers/grpc_server_builder.cpp
     src/grpc/servers/grpc_server.h

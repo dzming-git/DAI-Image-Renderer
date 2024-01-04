@@ -43,14 +43,18 @@ public:
     bool initImageHarmony(std::string ip, std::string port, int64_t loaderArgsHash);
     bool initTargetDetection(std::string ip, std::string port);
     bool setImageSize(int w, int h);
+    bool addInterestLaebl(std::string label);
     bool start();
     bool stop();
+    bool getImage(ImageHarmonyClient::ImageInfo imageInfo, int64_t &imageIdOutput, cv::Mat &imageOutput);
 private:
     int64_t taskId;
 
     std::thread* taskThread;
     int imageWidth;
     int imageHeight;
+
+    std::unordered_set<std::string> interestLabelsSet;
 
     // imageHarmony必要
     bool isImageHarmonySet;

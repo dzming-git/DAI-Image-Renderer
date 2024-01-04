@@ -49,6 +49,7 @@ TaskManager::TaskInfo* TaskManager::getTask(int64_t taskId) {
 TaskManager::TaskInfo::TaskInfo(int64_t taskId): 
 	taskId(taskId),
 	imageHarmonyClient(nullptr),
+	targetDetectionClient(nullptr),
 	imageWidth(0), 
 	imageHeight(0),
 	taskThread(nullptr),
@@ -124,99 +125,61 @@ bool TaskManager::TaskInfo::setImageSize(int w, int h) {
 	return true;
 }
 
+bool TaskManager::TaskInfo::addInterestLaebl(std::string label) {
+	interestLabelsSet.insert(label);
+}
+
 bool TaskManager::TaskInfo::start() {
 	if (!isImageHarmonySet) {
 		return false;
 	}
+	// 初始化 target detection
+	if (isTargetDetectionSet) {
+		// TODO 没有设置循环上限
+		while (true) {
+			targetDetection::ModelState modelState;
+			if (!targetDetectionClient->checkModelState(taskId, modelState)) {
+				std::cout << "connect target detect failed" << std::endl;
+				isTargetDetectionSet = false;
+				delete targetDetectionClient;
+			}
+			if (targetDetection::ModelState::NotSet == modelState) {
+				std::cout << "model is not set" << std::endl;
+				isTargetDetectionSet = false;
+				delete targetDetectionClient;
+			}
+			else if (targetDetection::ModelState::NotLoaded == modelState) {
+				targetDetectionClient->loadModel(taskId);
+			}
+			else if (targetDetection::ModelState::Loading == modelState) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			}
+			else if (targetDetection::ModelState::LoadingCompleted == modelState) {
+				break;
+			}
+		}
+	}
+	if (isTargetDetectionSet) {
+		targetDetectionClient->getMappingTable();
+	}
 
 	// TODO 目标追踪、行为识别
-	stopRequested = false;
-	taskThread = new std::thread([this](){
-		stopped = false;
+	// stopRequested = false;
+	// taskThread = new std::thread([this](){
+	// 	stopped = false;
 
-		// 初始化 target detection
-		if (isTargetDetectionSet) {
-			// TODO 没有设置循环上限
-			while (true) {
-				targetDetection::ModelState modelState;
-				if (!targetDetectionClient->checkModelState(taskId, modelState)) {
-					std::cout << "connect target detect failed" << std::endl;
-					isTargetDetectionSet = false;
-					delete targetDetectionClient;
-				}
-				if (targetDetection::ModelState::NotSet == modelState) {
-					std::cout << "model is not set" << std::endl;
-					isTargetDetectionSet = false;
-					delete targetDetectionClient;
-				}
-				else if (targetDetection::ModelState::NotLoaded == modelState) {
-					targetDetectionClient->loadModel(taskId);
-				}
-				else if (targetDetection::ModelState::Loading == modelState) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				}
-				else if (targetDetection::ModelState::LoadingCompleted == modelState) {
-					break;
-				}
-			}
-		}
-		if (isTargetDetectionSet) {
-			targetDetectionClient->getMappingTable();
-		}
 
-        while (!stopRequested) {
-			// TODO 任务的循环主体
-			int64 imageId = 0;
-			cv::Mat image;
-			ImageHarmonyClient::ImageInfo imageInfo;
-			double k = 0.5;
-			imageInfo.height = 1080 * k;
-			imageInfo.width = 1980 * k;
-			imageInfo.imageId = 0;  // TODO 测试使用0
-			if (!imageHarmonyClient->getImageByImageId(imageInfo, imageId, image)) {
-				continue;
-			}
-			// TODO 未来使用GPU渲染
-			if (isTargetDetectionSet) {
-				std::vector<TargetDetectionClient::Result> results;
-				targetDetectionClient->getResultByImageId(imageId, results);
-				for (auto result : results) {
-					int imageWidth = image.cols;
-					int imageHeight = image.rows;
-					int x1 = result.x1 * imageWidth;
-					int x2 = result.x2 * imageWidth;
-					int y1 = result.y1 * imageHeight;
-					int y2 = result.y2 * imageHeight;
-					std::string label = result.label;
 
-					int width = ceil(image.rows * .006);
-					int fontFace = cv::FONT_ITALIC;
-					double fontScale = image.rows * 0.0015;
-					int thickness = 1;
-					int baseline = 0;
-					cv::Size textsize = cv::getTextSize(label, fontFace, fontScale, thickness, &baseline);
-					baseline += thickness;
+    //     while (!stopRequested) {
+	// 		// TODO 任务的循环主体
 
-					cv::Point textorg(x1, y1);
-					cv::Scalar textColor(255, 255, 255);
-					cv::Scalar boxColor(0, 0, 255);
-					if(textorg.x < 0) textorg.x = 0;
-					if(textorg.x > image.cols - textsize.width) textorg.x = image.cols - textsize.width;
-					if(textorg.y < textsize.height + 1) textorg.y = textsize.height + 1;
-					if(textorg.y > image.rows) textorg.y = image.rows;
-					rectangle(image, textorg + cv::Point(width / 2, 0), cv::Point(x2, y2), boxColor, width); // 框
-					rectangle(image, textorg, textorg + cv::Point(textsize.width, -textsize.height - 1), boxColor, -1); // label背景
-		//            putText(image, label, textorg, fontFace, fontScale, Scalar::all(255), thickness, LINE_AA); // label 白色
-					putText(image, label, textorg, fontFace, fontScale, textColor, thickness, cv::LINE_AA); // label 反色
-				}
-			}
-			cv::imwrite(std::to_string(taskId) + ".jpg", image);
-			// cv::imshow(std::to_string(taskId), image);
-			// cv::waitKey(1);
-		}
-		stopped = true;
-    });
-	taskThread->detach();
+	// 		cv::imwrite(std::to_string(taskId) + ".jpg", image);
+	// 		// cv::imshow(std::to_string(taskId), image);
+	// 		// cv::waitKey(1);
+	// 	}
+	// 	stopped = true;
+    // });
+	// taskThread->detach();
 	return true;
 }
 
@@ -227,5 +190,50 @@ bool TaskManager::TaskInfo::stop() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 	pthread_mutex_unlock(&stopMutex);
+	return true;
+}
+
+bool TaskManager::TaskInfo::getImage(ImageHarmonyClient::ImageInfo imageInfo, int64_t &imageIdOutput, cv::Mat &imageOutput) {
+	if (!imageHarmonyClient->getImageByImageId(imageInfo, imageIdOutput, imageOutput)) {
+		return false;
+	}
+	// TODO 未来使用GPU渲染
+	if (isTargetDetectionSet) {
+		std::vector<TargetDetectionClient::Result> results;
+		targetDetectionClient->getResultByImageId(imageIdOutput, results);
+		for (auto result : results) {
+			// 
+			if (!interestLabelsSet.empty() && interestLabelsSet.find(result.label) != interestLabelsSet.end()) {
+				continue;
+			}
+			int imageWidth = imageOutput.cols;
+			int imageHeight = imageOutput.rows;
+			int x1 = result.x1 * imageWidth;
+			int x2 = result.x2 * imageWidth;
+			int y1 = result.y1 * imageHeight;
+			int y2 = result.y2 * imageHeight;
+			std::string label = result.label;
+
+			int width = ceil(imageOutput.rows * .006);
+			int fontFace = cv::FONT_ITALIC;
+			double fontScale = imageOutput.rows * 0.0015;
+			int thickness = 1;
+			int baseline = 0;
+			cv::Size textsize = cv::getTextSize(label, fontFace, fontScale, thickness, &baseline);
+			baseline += thickness;
+
+			cv::Point textorg(x1, y1);
+			cv::Scalar textColor(255, 255, 255);
+			cv::Scalar boxColor(0, 0, 255);
+			if(textorg.x < 0) textorg.x = 0;
+			if(textorg.x > imageOutput.cols - textsize.width) textorg.x = imageOutput.cols - textsize.width;
+			if(textorg.y < textsize.height + 1) textorg.y = textsize.height + 1;
+			if(textorg.y > imageOutput.rows) textorg.y = imageOutput.rows;
+			rectangle(imageOutput, textorg + cv::Point(width / 2, 0), cv::Point(x2, y2), boxColor, width); // 框
+			rectangle(imageOutput, textorg, textorg + cv::Point(textsize.width, -textsize.height - 1), boxColor, -1); // label背景
+//            putText(imageOutput, label, textorg, fontFace, fontScale, Scalar::all(255), thickness, LINE_AA); // label 白色
+			putText(imageOutput, label, textorg, fontFace, fontScale, textColor, thickness, cv::LINE_AA); // label 反色
+		}
+	}
 	return true;
 }

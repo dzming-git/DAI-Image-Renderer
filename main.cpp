@@ -1,6 +1,7 @@
 #include "grpc/servers/grpc_server.h"
 #include "grpc/servers/grpc_server_builder.h"
 #include "grpc/servers/service_coordinator/service_coordinator_server.h"
+#include "grpc/servers/image_renderer/image_renderer_server.h"
 #include "consul/consul_client.h"
 #include "consul/service_info.h"
 #include "config/config.h"
@@ -53,10 +54,12 @@ int main(int argc, char** argv) {
     consul.registerService(serviceInfo);
     GRPCServer::GRPCServerBuilder builder;
     ServiceCoordinatorServer taskCoordinateService;
+    ImageRendererServer imageRendererServer;
     builder.setHost("0.0.0.0")
            .setEpollCount(4, 8)
            .setMaxSendBytes(1024 * 1024 * 1024)
-           .addService(&taskCoordinateService);
+           .addService(&taskCoordinateService)
+           .addService(&imageRendererServer);
     auto server = builder.build();
     server->start();
     return 0;
