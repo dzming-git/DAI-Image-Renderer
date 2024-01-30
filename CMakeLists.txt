@@ -37,6 +37,8 @@ set(SOURCES
     src/grpc/clients/image_harmony/image_harmony_client.cpp
     src/grpc/clients/target_detection/target_detection_client.h
     src/grpc/clients/target_detection/target_detection_client.cpp
+    src/grpc/clients/target_tracking/target_tracking_client.h
+    src/grpc/clients/target_tracking/target_tracking_client.cpp
     src/grpc/servers/service_coordinator/service_coordinator_server.h
     src/grpc/servers/service_coordinator/service_coordinator_server.cpp
     src/grpc/servers/image_renderer/image_renderer_server.h
@@ -59,6 +61,7 @@ target_link_libraries(${PROJECT_NAME}
   service_coordinator_data_grpc_proto
   target_detection_data_grpc_proto
   image_renderer_data_grpc_proto
+  target_tracking_data_grpc_proto
   )
 
 # OpenCV

@@ -1,4 +1,5 @@
 #include "task_manager/task_manager.h"
+#include <random>
 
 TaskManager* TaskManager::instance = nullptr;
 pthread_mutex_t TaskManager::lock;
@@ -50,6 +51,7 @@ TaskManager::TaskInfo::TaskInfo(int64_t taskId):
 	taskId(taskId),
 	imageHarmonyClient(nullptr),
 	targetDetectionClient(nullptr),
+	targetTrackingClient(nullptr),
 	imageWidth(0), 
 	imageHeight(0),
 	taskThread(nullptr),
@@ -111,6 +113,27 @@ bool TaskManager::TaskInfo::initTargetDetection(std::string ip, std::string port
 	}
 	if (!targetDetectionClient->setTaskId(taskId)) {
 		delete targetDetectionClient;
+		return false;
+	}
+	return true;
+}
+
+bool TaskManager::TaskInfo::initTargetTracking(std::string ip, std::string port) {
+	// TODO 缺少输入合法性检测
+	isTargetTrackingSet = true;
+	targetTrackingIp = ip;
+	targetTrackingPort = port;
+	// 重置
+	if (targetTrackingClient) {
+		delete targetTrackingClient;
+	}
+	targetTrackingClient = new TargetTrackingClient();
+	if (!targetTrackingClient->setAddress(targetTrackingIp, targetTrackingPort)) {
+		delete targetTrackingClient;
+		return false;
+	}
+	if (!targetTrackingClient->setTaskId(taskId)) {
+		delete targetTrackingClient;
 		return false;
 	}
 	return true;
@@ -233,6 +256,36 @@ bool TaskManager::TaskInfo::getImage(ImageHarmonyClient::ImageInfo imageInfo, in
 			rectangle(imageOutput, textorg, textorg + cv::Point(textsize.width, -textsize.height - 1), boxColor, -1); // label背景
 //            putText(imageOutput, label, textorg, fontFace, fontScale, Scalar::all(255), thickness, LINE_AA); // label 白色
 			putText(imageOutput, label, textorg, fontFace, fontScale, textColor, thickness, cv::LINE_AA); // label 反色
+		}
+	}
+	if (isTargetTrackingSet) {
+		std::vector<TargetTrackingClient::Result> results;
+		targetTrackingClient->getResultByImageId(imageIdOutput, results);
+		for (auto result : results) {
+			int imageWidth = imageOutput.cols;
+			int imageHeight = imageOutput.rows;
+			int64_t id = result.id;
+			// 使用id哈希生成随机颜色
+			std::hash<int64_t> hashFn;
+			size_t hashedId = hashFn(id);
+			std::default_random_engine rng(hashedId);
+			std::uniform_int_distribution<int> dist(0, 255);
+			int red = dist(rng);
+			int green = dist(rng);
+			int blue = dist(rng);
+
+			auto bboxs = result.bboxs;
+			std::vector<cv::Point> points(bboxs.size());
+			for (int i = 0; i < bboxs.size(); ++i) {
+				int xBottomMiddle = (bboxs[i].x1 + bboxs[i].x2) * imageWidth / 2;
+				int yBottomMiddle = bboxs[i].y2 * imageHeight;
+				points[i] = cv::Point(xBottomMiddle, yBottomMiddle);
+				// int x1 = bboxs[i].x1 * imageWidth;
+				// int y1 = bboxs[i].y1 * imageHeight;
+				// int x2 = bboxs[i].x2 * imageWidth;
+				// int y2 = bboxs[i].y2 * imageHeight;
+			}
+			cv::polylines(imageOutput, points, false, cv::Scalar(blue, green, red), 2);
 		}
 	}
 	return true;

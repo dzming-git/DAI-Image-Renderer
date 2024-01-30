@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include "grpc/clients/image_harmony/image_harmony_client.h"
 #include "grpc/clients/target_detection/target_detection_client.h"
+#include "grpc/clients/target_tracking/target_tracking_client.h"
 
 class TaskManager {
 public:
@@ -42,6 +43,7 @@ public:
     ~TaskInfo();
     bool initImageHarmony(std::string ip, std::string port, int64_t loaderArgsHash);
     bool initTargetDetection(std::string ip, std::string port);
+    bool initTargetTracking(std::string ip, std::string port);
     bool setImageSize(int w, int h);
     bool addInterestLaebl(std::string label);
     bool start();
@@ -63,11 +65,17 @@ private:
     int64_t loaderArgsHash;
     ImageHarmonyClient* imageHarmonyClient;
     
-    
+    // 目标检测
     bool isTargetDetectionSet;
     std::string targetDetectionIp;
     std::string targetDetectionPort;
     TargetDetectionClient* targetDetectionClient;
+
+    // 目标追踪
+    bool isTargetTrackingSet;
+    std::string targetTrackingIp;
+    std::string targetTrackingPort;
+    TargetTrackingClient* targetTrackingClient;
 
     pthread_mutex_t stopMutex;
     bool stopRequested;

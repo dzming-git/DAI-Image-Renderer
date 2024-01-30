@@ -51,7 +51,12 @@ grpc::Status ServiceCoordinatorServer::informPreviousServiceInfo(grpc::ServerCon
         }
         else if ("target detection" == preServiceName) {
             if (!taskInfo->initTargetDetection(preServiceIp, preServicePort)) {
-                throw std::runtime_error("Failed to set tarc  get detection address. Task ID: " + std::to_string(taskId) + "\n");
+                throw std::runtime_error("Failed to set target detection address. Task ID: " + std::to_string(taskId) + "\n");
+            }
+        }
+        else if ("target tracking" == preServiceName) {
+            if (!taskInfo->initTargetTracking(preServiceIp, preServicePort)) {
+                throw std::runtime_error("Failed to set target tracking address. Task ID: " + std::to_string(taskId) + "\n");
             }
         }
         else {
