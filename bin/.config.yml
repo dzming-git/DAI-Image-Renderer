@@ -5,5 +5,5 @@ service:
     - interface:gRPC
 
 consul:
-  ip: 10.0.0.2
+  ip: 10.10.10.2
   port: 8500
