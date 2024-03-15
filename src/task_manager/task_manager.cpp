@@ -216,6 +216,23 @@ bool TaskManager::TaskInfo::stop() {
 	return true;
 }
 
+inline void putTextWithBackColor(cv::Mat &imageOutput, std::string text, cv::Scalar textColor, cv::Scalar backColor, cv::Point textOrg) {
+		int width = ceil(imageOutput.rows * .006);
+		int fontFace = cv::FONT_ITALIC;
+		double fontScale = imageOutput.rows * 0.0015;
+		int thickness = 1;
+		int baseline = 0;
+		cv::Size textsize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
+		baseline += thickness;
+
+		if(textOrg.x < 0) textOrg.x = 0;
+		if(textOrg.x > imageOutput.cols - textsize.width) textOrg.x = imageOutput.cols - textsize.width;
+		if(textOrg.y < textsize.height + 1) textOrg.y = textsize.height + 1;
+		if(textOrg.y > imageOutput.rows) textOrg.y = imageOutput.rows;
+		rectangle(imageOutput, textOrg, textOrg + cv::Point(textsize.width, -textsize.height - 1), backColor, -1); // label背景
+		putText(imageOutput, text, textOrg, fontFace, fontScale, textColor, thickness, cv::LINE_AA); // label 反色
+}
+
 bool TaskManager::TaskInfo::getImage(ImageHarmonyClient::ImageInfo imageInfo, int64_t &imageIdOutput, cv::Mat &imageOutput) {
 	if (!imageHarmonyClient->getImageByImageId(imageInfo, imageIdOutput, imageOutput)) {
 		return false;
@@ -253,9 +270,7 @@ bool TaskManager::TaskInfo::getImage(ImageHarmonyClient::ImageInfo imageInfo, in
 			if(textorg.y < textsize.height + 1) textorg.y = textsize.height + 1;
 			if(textorg.y > imageOutput.rows) textorg.y = imageOutput.rows;
 			rectangle(imageOutput, textorg + cv::Point(width / 2, 0), cv::Point(x2, y2), boxColor, width); // 框
-			rectangle(imageOutput, textorg, textorg + cv::Point(textsize.width, -textsize.height - 1), boxColor, -1); // label背景
-//            putText(imageOutput, label, textorg, fontFace, fontScale, Scalar::all(255), thickness, LINE_AA); // label 白色
-			putText(imageOutput, label, textorg, fontFace, fontScale, textColor, thickness, cv::LINE_AA); // label 反色
+			putTextWithBackColor(imageOutput, label, textColor, boxColor, textorg);
 		}
 	}
 	if (isTargetTrackingSet) {
@@ -280,10 +295,6 @@ bool TaskManager::TaskInfo::getImage(ImageHarmonyClient::ImageInfo imageInfo, in
 				int xBottomMiddle = (bboxs[i].x1 + bboxs[i].x2) * imageWidth / 2;
 				int yBottomMiddle = bboxs[i].y2 * imageHeight;
 				points[i] = cv::Point(xBottomMiddle, yBottomMiddle);
-				// int x1 = bboxs[i].x1 * imageWidth;
-				// int y1 = bboxs[i].y1 * imageHeight;
-				// int x2 = bboxs[i].x2 * imageWidth;
-				// int y2 = bboxs[i].y2 * imageHeight;
 			}
 			cv::polylines(imageOutput, points, false, cv::Scalar(blue, green, red), 2);
 		}
