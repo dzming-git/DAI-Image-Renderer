@@ -62,6 +62,7 @@ target_link_libraries(${PROJECT_NAME}
   target_detection_data_grpc_proto
   image_renderer_data_grpc_proto
   target_tracking_data_grpc_proto
+  behavior_recognition_data_grpc_proto
   )
 
 # OpenCV
