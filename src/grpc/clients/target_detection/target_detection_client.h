@@ -43,6 +43,7 @@ private:
     std::mutex stubMutex;
     targetDetection::Communicate::Stub* stub;
     int64_t taskId;
+    std::mutex labelsMutex;
     std::vector<std::string> labels;
 };
 

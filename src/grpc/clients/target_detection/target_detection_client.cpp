@@ -4,7 +4,9 @@ TargetDetectionClient::TargetDetectionClient(): stub(nullptr), taskId(0) {
 }
 
 TargetDetectionClient::~TargetDetectionClient() {
-    std::lock_guard<std::mutex> lock(stubMutex);
+    std::lock(stubMutex, labelsMutex); // 同时锁定两个互斥锁
+    std::lock_guard<std::mutex> lk1(stubMutex, std::adopt_lock);
+    std::lock_guard<std::mutex> lk2(labelsMutex, std::adopt_lock);
     if (stub) {
         delete stub;
         stub = nullptr;
@@ -58,6 +60,7 @@ bool TargetDetectionClient::getMappingTable() {
 }
 
 bool TargetDetectionClient::getResultByImageId(int64_t imageId, std::vector<TargetDetectionClient::Result>& results) {
+    std::lock_guard<std::mutex> lock(labelsMutex);
     if (nullptr == stub) {
         return false;
     }
