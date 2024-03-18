@@ -4,8 +4,10 @@ TargetDetectionClient::TargetDetectionClient(): stub(nullptr), taskId(0) {
 }
 
 TargetDetectionClient::~TargetDetectionClient() {
+    std::lock_guard<std::mutex> lock(stubMutex);
     if (stub) {
         delete stub;
+        stub = nullptr;
     }
 }
 
@@ -16,6 +18,7 @@ bool TargetDetectionClient::setAddress(std::string ip, std::string port) {
     // 重置
     if (stub) {
         delete stub;
+        stub = nullptr;
     }
     // unique_ptr 转为 普通指针
     stub = stubTmp.get();
@@ -29,6 +32,9 @@ bool TargetDetectionClient::setTaskId(int64_t taskId) {
 }
 
 bool TargetDetectionClient::getMappingTable() {
+    if (nullptr == stub) {
+        return false;
+    }
     targetDetection::GetResultMappingTableRequest getResultMappingTableRequest;
     targetDetection::GetResultMappingTableResponse getResultMappingTableResponse;
     grpc::ClientContext context;
@@ -52,6 +58,9 @@ bool TargetDetectionClient::getMappingTable() {
 }
 
 bool TargetDetectionClient::getResultByImageId(int64_t imageId, std::vector<TargetDetectionClient::Result>& results) {
+    if (nullptr == stub) {
+        return false;
+    }
     if (labels.empty()) {
         std::cout << "labels is empty" << std::endl;
         return false;
@@ -94,6 +103,9 @@ bool TargetDetectionClient::getResultByImageId(int64_t imageId, std::vector<Targ
 }
 
 bool TargetDetectionClient::loadModel(int64_t taskId) {
+    if (nullptr == stub) {
+        return false;
+    }
     targetDetection::LoadModelRequest loadModelRequest;
     targetDetection::LoadModelResponse loadModelResponse;
     grpc::ClientContext context;
@@ -112,6 +124,9 @@ bool TargetDetectionClient::loadModel(int64_t taskId) {
 }
 
 bool TargetDetectionClient::checkModelState(int64_t taskId, targetDetection::ModelState& modelState) {
+    if (nullptr == stub) {
+        return false;
+    }
     targetDetection::CheckModelStateRequest checkModelStateRequest;
     targetDetection::CheckModelStateResponse checkModelStateResponse;
     grpc::ClientContext context;

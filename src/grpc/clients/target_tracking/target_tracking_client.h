@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <grpc++/grpc++.h>
+#include <mutex>
 #include <opencv2/opencv.hpp>
 #include "protos/target_tracking/target_tracking.grpc.pb.h"
 #include "protos/target_tracking/target_tracking.pb.h"
@@ -39,6 +40,7 @@ public:
     bool setTaskId(int64_t taskId);
     bool getResultByImageId(int64_t imageId, std::vector<TargetTrackingClient::Result>& results);
 private:
+    std::mutex stubMutex;
     targetTracking::Communicate::Stub* stub;
     int64_t taskId;
 };

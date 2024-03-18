@@ -15,6 +15,7 @@
 
 #include <string>
 #include <grpc++/grpc++.h>
+#include <mutex>
 #include <opencv2/opencv.hpp>
 #include "protos/target_detection/target_detection.grpc.pb.h"
 #include "protos/target_detection/target_detection.pb.h"
@@ -39,6 +40,7 @@ public:
     bool loadModel(int64_t taskId);
     bool checkModelState(int64_t taskId, targetDetection::ModelState& modelState);
 private:
+    std::mutex stubMutex;
     targetDetection::Communicate::Stub* stub;
     int64_t taskId;
     std::vector<std::string> labels;

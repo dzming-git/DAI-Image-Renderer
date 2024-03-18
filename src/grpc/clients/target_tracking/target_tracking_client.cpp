@@ -4,8 +4,10 @@ TargetTrackingClient::TargetTrackingClient(): stub(nullptr), taskId(0) {
 }
 
 TargetTrackingClient::~TargetTrackingClient() {
+    std::lock_guard<std::mutex> lock(stubMutex);
     if (stub) {
         delete stub;
+        stub = nullptr;
     }
 }
 
@@ -16,6 +18,7 @@ bool TargetTrackingClient::setAddress(std::string ip, std::string port) {
     // 重置
     if (stub) {
         delete stub;
+        stub = nullptr;
     }
     // unique_ptr 转为 普通指针
     stub = stubTmp.get();
@@ -29,6 +32,9 @@ bool TargetTrackingClient::setTaskId(int64_t taskId) {
 }
 
 bool TargetTrackingClient::getResultByImageId(int64_t imageId, std::vector<TargetTrackingClient::Result>& results) {
+    if (nullptr == stub) {
+        return false;
+    }
     targetTracking::GetResultByImageIdRequest getResultByImageIdRequest;
     targetTracking::GetResultByImageIdResponse getResultByImageIdResponse;
     grpc::ClientContext context;
