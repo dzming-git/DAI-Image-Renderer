@@ -1,9 +1,11 @@
 #include "grpc/clients/target_tracking/target_tracking_client.h"
 
 TargetTrackingClient::TargetTrackingClient(): stub(nullptr), taskId(0) {
+    shouldStop.store(false);
 }
 
 TargetTrackingClient::~TargetTrackingClient() {
+    shouldStop.store(true);
     std::lock_guard<std::mutex> lock(stubMutex);
     if (stub) {
         delete stub;
@@ -12,6 +14,7 @@ TargetTrackingClient::~TargetTrackingClient() {
 }
 
 bool TargetTrackingClient::setAddress(std::string ip, std::string port) {
+    if (shouldStop.load()) return false;
     // TODO 重置时未考虑线程安全
     std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + port, grpc::InsecureChannelCredentials());
     std::unique_ptr<targetTracking::Communicate::Stub> stubTmp = targetTracking::Communicate::NewStub(channel);
@@ -27,11 +30,13 @@ bool TargetTrackingClient::setAddress(std::string ip, std::string port) {
 }
 
 bool TargetTrackingClient::setTaskId(int64_t taskId) {
+    if (shouldStop.load()) return false;
     this->taskId = taskId;
     return true;
 }
 
 bool TargetTrackingClient::getResultByImageId(int64_t imageId, std::vector<TargetTrackingClient::Result>& results) {
+    if (shouldStop.load()) return false;
     if (nullptr == stub) {
         return false;
     }
@@ -42,6 +47,7 @@ bool TargetTrackingClient::getResultByImageId(int64_t imageId, std::vector<Targe
     getResultByImageIdRequest.set_taskid(taskId);
     getResultByImageIdRequest.set_imageid(imageId);
     getResultByImageIdRequest.set_wait(true);
+    getResultByImageIdRequest.set_onlythelatest(false);
     grpc::Status status = stub->getResultByImageId(&context, getResultByImageIdRequest, &getResultByImageIdResponse);
     targetTracking::CustomResponse response = getResultByImageIdResponse.response();
     int32_t code = response.code();

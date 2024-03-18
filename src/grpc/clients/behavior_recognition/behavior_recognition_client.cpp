@@ -1,9 +1,11 @@
 #include "grpc/clients/behavior_recognition/behavior_recognition_client.h"
 
 BehaviorRecognitionClient::BehaviorRecognitionClient(): stub(nullptr), taskId(0) {
+    shouldStop.store(false);
 }
 
 BehaviorRecognitionClient::~BehaviorRecognitionClient() {
+    shouldStop.store(true);
     std::lock_guard<std::mutex> lock(stubMutex);
     if (stub) {
         delete stub;
@@ -12,6 +14,7 @@ BehaviorRecognitionClient::~BehaviorRecognitionClient() {
 }
 
 bool BehaviorRecognitionClient::setAddress(std::string ip, std::string port) {
+    if (shouldStop.load()) return false;
     // TODO 重置时未考虑线程安全
     std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + port, grpc::InsecureChannelCredentials());
     std::unique_ptr<behaviorRecognition::Communicate::Stub> stubTmp = behaviorRecognition::Communicate::NewStub(channel);
@@ -27,11 +30,13 @@ bool BehaviorRecognitionClient::setAddress(std::string ip, std::string port) {
 }
 
 bool BehaviorRecognitionClient::setTaskId(int64_t taskId) {
+    if (shouldStop.load()) return false;
     this->taskId = taskId;
     return true;
 }
 
 bool BehaviorRecognitionClient::informImageId(int64_t imageId) {
+    if (shouldStop.load()) return false;
     behaviorRecognition::InformImageIdRequest request;
     request.set_taskid(this->taskId);
     request.set_imageid(imageId);
@@ -51,6 +56,7 @@ bool BehaviorRecognitionClient::informImageId(int64_t imageId) {
 }
 
 bool BehaviorRecognitionClient::getResultByImageId(int64_t imageId, std::vector<BehaviorRecognitionClient::Result>& results) {
+    if (shouldStop.load()) return false;
     behaviorRecognition::GetResultByImageIdRequest request;
     request.set_taskid(this->taskId);
     request.set_imageid(imageId);
@@ -83,6 +89,7 @@ bool BehaviorRecognitionClient::getResultByImageId(int64_t imageId, std::vector<
 }
 
 bool BehaviorRecognitionClient::getLatestResult(std::vector<BehaviorRecognitionClient::Result>& results) {
+    if (shouldStop.load()) return false;
     behaviorRecognition::GetLatestResultRequest request;
     request.set_taskid(this->taskId);
 

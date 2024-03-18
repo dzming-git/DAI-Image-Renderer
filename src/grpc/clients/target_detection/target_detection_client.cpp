@@ -1,9 +1,11 @@
 #include "grpc/clients/target_detection/target_detection_client.h"
 
 TargetDetectionClient::TargetDetectionClient(): stub(nullptr), taskId(0) {
+    shouldStop.store(false);
 }
 
 TargetDetectionClient::~TargetDetectionClient() {
+    shouldStop.store(true);
     std::lock(stubMutex, labelsMutex); // 同时锁定两个互斥锁
     std::lock_guard<std::mutex> lk1(stubMutex, std::adopt_lock);
     std::lock_guard<std::mutex> lk2(labelsMutex, std::adopt_lock);
@@ -14,6 +16,7 @@ TargetDetectionClient::~TargetDetectionClient() {
 }
 
 bool TargetDetectionClient::setAddress(std::string ip, std::string port) {
+    if (shouldStop.load()) return false;
     // TODO 重置时未考虑线程安全
     std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + port, grpc::InsecureChannelCredentials());
     std::unique_ptr<targetDetection::Communicate::Stub> stubTmp = targetDetection::Communicate::NewStub(channel);
@@ -29,11 +32,13 @@ bool TargetDetectionClient::setAddress(std::string ip, std::string port) {
 }
 
 bool TargetDetectionClient::setTaskId(int64_t taskId) {
+    if (shouldStop.load()) return false;
     this->taskId = taskId;
     return true;
 }
 
 bool TargetDetectionClient::getMappingTable() {
+    if (shouldStop.load()) return false;
     if (nullptr == stub) {
         return false;
     }
@@ -60,6 +65,7 @@ bool TargetDetectionClient::getMappingTable() {
 }
 
 bool TargetDetectionClient::getResultByImageId(int64_t imageId, std::vector<TargetDetectionClient::Result>& results) {
+    if (shouldStop.load()) return false;
     std::lock_guard<std::mutex> lock(labelsMutex);
     if (nullptr == stub) {
         return false;
@@ -106,6 +112,7 @@ bool TargetDetectionClient::getResultByImageId(int64_t imageId, std::vector<Targ
 }
 
 bool TargetDetectionClient::loadModel(int64_t taskId) {
+    if (shouldStop.load()) return false;
     if (nullptr == stub) {
         return false;
     }
@@ -127,6 +134,7 @@ bool TargetDetectionClient::loadModel(int64_t taskId) {
 }
 
 bool TargetDetectionClient::checkModelState(int64_t taskId, targetDetection::ModelState& modelState) {
+    if (shouldStop.load()) return false;
     if (nullptr == stub) {
         return false;
     }

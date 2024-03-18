@@ -43,6 +43,7 @@ private:
     std::mutex stubMutex;
     targetTracking::Communicate::Stub* stub;
     int64_t taskId;
+    std::atomic<bool> shouldStop;
 };
 
 #endif /* _TARGET_TRACKING_CLIENT_H_ */

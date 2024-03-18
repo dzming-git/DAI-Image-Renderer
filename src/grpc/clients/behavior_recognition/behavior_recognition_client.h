@@ -44,6 +44,7 @@ private:
     behaviorRecognition::Communicate::Stub* stub;
     int64_t taskId;
     std::vector<std::string> labels;
+    std::atomic<bool> shouldStop;
 };
 
 

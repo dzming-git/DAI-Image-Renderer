@@ -1,9 +1,11 @@
 #include "grpc/clients/image_harmony/image_harmony_client.h"
 
 ImageHarmonyClient::ImageHarmonyClient(): stub(nullptr), connectId(0) {
+    shouldStop.store(false);
 }
 
 ImageHarmonyClient::~ImageHarmonyClient() {
+    shouldStop.store(true);
     std::lock_guard<std::mutex> lock(stubMutex);
     if (stub) {
         delete stub;
@@ -12,6 +14,7 @@ ImageHarmonyClient::~ImageHarmonyClient() {
 }
 
 bool ImageHarmonyClient::setAddress(std::string ip, std::string port) {
+    if (shouldStop.load()) return false;
     // TODO 重置时未考虑线程安全
     std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + port, grpc::InsecureChannelCredentials());
     std::unique_ptr<imageHarmony::Communicate::Stub> stubTmp = imageHarmony::Communicate::NewStub(channel);
@@ -27,6 +30,7 @@ bool ImageHarmonyClient::setAddress(std::string ip, std::string port) {
 }
 
 bool ImageHarmonyClient::connectImageLoader(int64_t loaderArgsHash) {
+    if (shouldStop.load()) return false;
     if (nullptr == stub) {
         return false;
     }
@@ -52,6 +56,7 @@ bool ImageHarmonyClient::connectImageLoader(int64_t loaderArgsHash) {
 }
 
 bool ImageHarmonyClient::disconnectImageLoader() {
+    if (shouldStop.load()) return false;
     if (0 == connectId) {
         return true;
     }
@@ -75,6 +80,7 @@ bool ImageHarmonyClient::disconnectImageLoader() {
 }
 
 bool ImageHarmonyClient::getImageByImageId(ImageHarmonyClient::ImageInfo imageInfo, int64_t& imageIdOutput, cv::Mat& imageOutput) {
+    if (shouldStop.load()) return false;
     if (nullptr == stub) {
         return false;
     }

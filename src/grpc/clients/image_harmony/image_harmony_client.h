@@ -40,6 +40,7 @@ private:
     std::mutex stubMutex;
     imageHarmony::Communicate::Stub* stub;
     int64_t connectId;
+    std::atomic<bool> shouldStop;
 };
 
 #endif /* _IMAGE_HARMONY_CLIENT_H_ */
