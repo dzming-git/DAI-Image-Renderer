@@ -4,8 +4,10 @@ ImageHarmonyClient::ImageHarmonyClient(): stub(nullptr), connectId(0) {
 }
 
 ImageHarmonyClient::~ImageHarmonyClient() {
+    std::lock_guard<std::mutex> lock(stubMutex);
     if (stub) {
         delete stub;
+        stub = nullptr;
     }
 }
 
@@ -16,6 +18,7 @@ bool ImageHarmonyClient::setAddress(std::string ip, std::string port) {
     // 重置
     if (stub) {
         delete stub;
+        stub = nullptr;
     }
     // unique_ptr 转为 普通指针
     stub = stubTmp.get();
@@ -23,7 +26,10 @@ bool ImageHarmonyClient::setAddress(std::string ip, std::string port) {
     return true;
 }
 
-bool ImageHarmonyClient::setLoaderArgsHash(int64_t loaderArgsHash) {
+bool ImageHarmonyClient::connectImageLoader(int64_t loaderArgsHash) {
+    if (nullptr == stub) {
+        return false;
+    }
     imageHarmony::RegisterImageTransServiceRequest registerImageHarmonyServiceRequest;
     imageHarmony::RegisterImageTransServiceResponse registerImageHarmonyServiceResponse;
     grpc::ClientContext context;
@@ -39,10 +45,39 @@ bool ImageHarmonyClient::setLoaderArgsHash(int64_t loaderArgsHash) {
         return false;
     }
     connectId = registerImageHarmonyServiceResponse.connectid();
+    if (0 == connectId) {
+        return false;
+    }
+    return true;
+}
+
+bool ImageHarmonyClient::disconnectImageLoader() {
+    if (0 == connectId) {
+        return true;
+    }
+    if (nullptr == stub) {
+        return false;
+    }
+    imageHarmony::UnregisterImageTransServiceRequest request;
+    imageHarmony::UnregisterImageTransServiceResponse response;
+    grpc::ClientContext context;
+    request.set_connectid(connectId);
+    grpc::Status status = stub->unregisterImageTransService(&context, request, &response);
+    imageHarmony::CustomResponse customResponse = response.response();
+    int32_t code = customResponse.code();
+    if (200 != code) {
+        auto message = customResponse.message();
+        // TODO 以后改成日志
+        std::cout << message << std::endl;
+        return false;
+    }
     return true;
 }
 
 bool ImageHarmonyClient::getImageByImageId(ImageHarmonyClient::ImageInfo imageInfo, int64_t& imageIdOutput, cv::Mat& imageOutput) {
+    if (nullptr == stub) {
+        return false;
+    }
     imageHarmony::GetImageByImageIdRequest getImageByImageIdRequest;
     imageHarmony::GetImageByImageIdResponse getImageByImageIdResponse;
     grpc::ClientContext context;

@@ -27,14 +27,7 @@ grpc::Status ServiceCoordinatorServer::informPreviousServiceInfo(grpc::ServerCon
         }
         auto taskInfo = taskManager->getTask(taskId);
         if (nullptr == taskInfo) {
-            if (!taskManager->addTask(taskId)) {
-                throw std::runtime_error("Failed to add task. Task ID: " + std::to_string(taskId) + "\n");
-            }
-            addTaskFlag = true;
-            taskInfo = taskManager->getTask(taskId);
-            if (nullptr == taskInfo) {
-                throw std::runtime_error("Failed to get task. Task ID: " + std::to_string(taskId) + "\n");
-            }
+            throw std::runtime_error("Task ID: " + std::to_string(taskId) + " does not exit.\n");
         }
 
         std::string preServiceName = request->preservicename();
@@ -59,13 +52,15 @@ grpc::Status ServiceCoordinatorServer::informPreviousServiceInfo(grpc::ServerCon
                 throw std::runtime_error("Failed to set target tracking address. Task ID: " + std::to_string(taskId) + "\n");
             }
         }
+        else if ("behavior recognition" == preServiceName) {
+            if (!taskInfo->initBehaviorRecognition(preServiceIp, preServicePort)) {
+                throw std::runtime_error("Failed to set behavior recognition address. Task ID: " + std::to_string(taskId) + "\n");
+            }
+        }
         else {
             throw std::runtime_error("The current version of this service does not support the feature:" + preServiceName + "\n");
         }
     } catch (const std::exception& e) {
-        if (addTaskFlag) {
-            taskManager->deleteTask(taskId);
-        }
         responseCode = 400;
         responseMessage += e.what();
     }
@@ -77,14 +72,25 @@ grpc::Status ServiceCoordinatorServer::informPreviousServiceInfo(grpc::ServerCon
 grpc::Status ServiceCoordinatorServer::informCurrentServiceInfo(grpc::ServerContext*, const serviceCoordinator::InformCurrentServiceInfoRequest* request, serviceCoordinator::InformCurrentServiceInfoResponse* response) {
     int32_t responseCode = 200;
     std::string responseMessage;
+    auto taskManager = TaskManager::getSingletonInstance();
+    request->PrintDebugString();
     try {
+        int64_t taskId = request->taskid();
         std::unordered_map<std::string, std::string> args;
         int argsCnt = request->args_size();
         for (int i = 0; i < argsCnt; ++i) {
             auto arg = request->args(i);
             args.emplace(arg.key(), arg.value());
         }
-        // TODO do something
+        auto taskInfo = taskManager->getTask(taskId);
+        if (nullptr == taskInfo) {
+            if (!taskManager->addTask(taskId)) {
+                throw std::runtime_error("Failed to add task. Task ID: " + std::to_string(taskId) + "\n");
+            }
+        }
+        else {
+            responseMessage += "Task ID: " + std::to_string(taskId) + " exits.\n";
+        }
     } catch (const std::exception& e) {
         responseCode = 400;
         responseMessage += e.what();
@@ -111,8 +117,8 @@ grpc::Status ServiceCoordinatorServer::start(grpc::ServerContext*, const service
                 throw std::runtime_error("Failed to get task. Task ID: " + std::to_string(taskId) + "\n");
             }
         }
-        if (!taskInfo->start()) {
-            throw std::runtime_error("Failed to start task. Task ID: " + std::to_string(taskId) + "\n");
+        if (!taskInfo->init()) {
+            throw std::runtime_error("Failed to init task. Task ID: " + std::to_string(taskId) + "\n");
         }
     } catch (const std::exception& e) {
         responseCode = 400;
@@ -127,24 +133,20 @@ grpc::Status ServiceCoordinatorServer::stop(grpc::ServerContext*, const serviceC
     int32_t responseCode = 200;
     std::string responseMessage;
     auto taskManager = TaskManager::getSingletonInstance();
-    try {
-        int64_t taskId = request->taskid();
-        auto taskInfo = taskManager->getTask(taskId);
-        if (nullptr == taskInfo) {
-            if (!taskManager->addTask(taskId)) {
-                throw std::runtime_error("Failed to add task. Task ID: " + std::to_string(taskId) + "\n");
+    int64_t taskId = request->taskid();
+    auto taskInfo = taskManager->getTask(taskId);
+    if (nullptr == taskInfo) {
+        responseMessage += "Task ID: " + std::to_string(taskId) + " does not exit.\n";
+    }
+    else {
+        try {
+            if (!taskManager->deleteTask(taskId)) {
+                throw std::runtime_error("Failed to delete task. Task ID: " + std::to_string(taskId) + "\n");
             }
-            taskInfo = taskManager->getTask(taskId);
-            if (nullptr == taskInfo) {
-                throw std::runtime_error("Failed to get task. Task ID: " + std::to_string(taskId) + "\n");
-            }
+        } catch (const std::exception& e) {
+            responseCode = 400;
+            responseMessage += e.what();
         }
-        if (!taskInfo->stop()) {
-            throw std::runtime_error("Failed to stop task. Task ID: " + std::to_string(taskId) + "\n");
-        }
-    } catch (const std::exception& e) {
-        responseCode = 400;
-        responseMessage += e.what();
     }
     response->mutable_response()->set_code(responseCode);
     response->mutable_response()->set_message(responseMessage);

@@ -15,6 +15,7 @@
 
 #include <string>
 #include <grpc++/grpc++.h>
+#include <mutex>
 #include <opencv2/opencv.hpp>
 #include "protos/image_harmony/image_harmony.grpc.pb.h"
 #include "protos/image_harmony/image_harmony.pb.h"
@@ -32,9 +33,11 @@ public:
     };
 
     bool setAddress(std::string ip, std::string port);
-    bool setLoaderArgsHash(int64_t loaderArgsHash);
+    bool connectImageLoader(int64_t loaderArgsHash);
+    bool disconnectImageLoader();
     bool getImageByImageId(ImageHarmonyClient::ImageInfo imageInfo, int64_t& imageIdOutput, cv::Mat& imageOutput);
 private:
+    std::mutex stubMutex;
     imageHarmony::Communicate::Stub* stub;
     int64_t connectId;
 };
