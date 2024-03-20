@@ -39,7 +39,7 @@ public:
 private:
     std::mutex stubMutex;
     imageHarmony::Communicate::Stub* stub;
-    int64_t connectId;
+    int64_t connectionId;
     std::atomic<bool> shouldStop;
 };
 

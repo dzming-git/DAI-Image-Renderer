@@ -41,17 +41,19 @@ int main(int argc, char** argv) {
     consul
         .setConsulIp(config->getConsulIp())
         .setConsulPort(config->getConsulPort());
-    ServiceInfo serviceInfo;
     std::string host = getPrivateIpLinux();
-    std::string serviceName = config->getServiceName();
-    std::string servicePort = config->getServicePort();
-    serviceInfo
-        .setServiceIp(host)
-        .setServicePort(servicePort)
-        .setServiceId(serviceName + "-" + host + ":" + servicePort)
-        .setServiceName(serviceName)
-        .setServiceTags(config->getServiceTags());
-    consul.registerService(serviceInfo);
+    auto services = config->getServices();
+    for (const auto& service : services) {
+        ServiceInfo serviceInfo;
+        serviceInfo
+            .setServiceIp(host)
+            .setServicePort(service.port)
+            .setServiceId(service.name + "-" + host + ":" + std::to_string(service.port))
+            .setServiceName(service.name)
+            .setServiceTags(service.tags);
+        consul.registerService(serviceInfo);
+
+    }
     GRPCServer::GRPCServerBuilder builder;
     ServiceCoordinatorServer taskCoordinateService;
     ImageRendererServer imageRendererServer;

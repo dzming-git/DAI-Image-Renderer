@@ -51,6 +51,8 @@ set(SOURCES
     src/grpc/servers/grpc_server.cpp
     src/task_manager/task_manager.h
     src/task_manager/task_manager.cpp
+    src/utils/log.h
+    src/utils/log.cpp
     )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

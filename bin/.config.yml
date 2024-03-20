@@ -1,8 +1,8 @@
-service:
-  name: image renderer
-  port: 5000
-  tags: 
-    - interface:gRPC
+services:
+  - name: image renderer
+    port: 5000
+    tags: 
+      - interface:gRPC
 
 consul:
   ip: 10.10.10.2

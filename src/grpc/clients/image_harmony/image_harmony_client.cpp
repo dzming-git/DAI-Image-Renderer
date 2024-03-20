@@ -1,6 +1,6 @@
 #include "grpc/clients/image_harmony/image_harmony_client.h"
 
-ImageHarmonyClient::ImageHarmonyClient(): stub(nullptr), connectId(0) {
+ImageHarmonyClient::ImageHarmonyClient(): stub(nullptr), connectionId(0) {
     shouldStop.store(false);
 }
 
@@ -34,22 +34,21 @@ bool ImageHarmonyClient::connectImageLoader(int64_t loaderArgsHash) {
     if (nullptr == stub) {
         return false;
     }
-    imageHarmony::RegisterImageTransServiceRequest registerImageHarmonyServiceRequest;
-    imageHarmony::RegisterImageTransServiceResponse registerImageHarmonyServiceResponse;
+    imageHarmony::ConnectImageTransServiceRequest request;
+    imageHarmony::ConnectImageTransServiceResponse response;
     grpc::ClientContext context;
-    registerImageHarmonyServiceRequest.set_loaderargshash(loaderArgsHash);
-    registerImageHarmonyServiceRequest.set_isunique(false);
-    grpc::Status status = stub->registerImageTransService(&context, registerImageHarmonyServiceRequest, &registerImageHarmonyServiceResponse);
-    imageHarmony::CustomResponse response = registerImageHarmonyServiceResponse.response();
-    int32_t code = response.code();
+    request.set_loaderargshash(loaderArgsHash);
+    grpc::Status status = stub->connectImageTransService(&context, request, &response);
+    imageHarmony::CustomResponse customresponse = response.response();
+    int32_t code = customresponse.code();
     if (200 != code) {
-        auto message = response.message();
+        auto message = customresponse.message();
         // TODO 以后改成日志
         std::cout << message << std::endl;
         return false;
     }
-    connectId = registerImageHarmonyServiceResponse.connectid();
-    if (0 == connectId) {
+    connectionId = response.connectionid();
+    if (0 == connectionId) {
         return false;
     }
     return true;
@@ -57,17 +56,17 @@ bool ImageHarmonyClient::connectImageLoader(int64_t loaderArgsHash) {
 
 bool ImageHarmonyClient::disconnectImageLoader() {
     if (shouldStop.load()) return false;
-    if (0 == connectId) {
+    if (0 == connectionId) {
         return true;
     }
     if (nullptr == stub) {
         return false;
     }
-    imageHarmony::UnregisterImageTransServiceRequest request;
-    imageHarmony::UnregisterImageTransServiceResponse response;
+    imageHarmony::DisconnectImageTransServiceRequest request;
+    imageHarmony::DisconnectImageTransServiceResponse response;
     grpc::ClientContext context;
-    request.set_connectid(connectId);
-    grpc::Status status = stub->unregisterImageTransService(&context, request, &response);
+    request.set_connectionid(connectionId);
+    grpc::Status status = stub->disconnectImageTransService(&context, request, &response);
     imageHarmony::CustomResponse customResponse = response.response();
     int32_t code = customResponse.code();
     if (200 != code) {
@@ -84,38 +83,38 @@ bool ImageHarmonyClient::getImageByImageId(ImageHarmonyClient::ImageInfo imageIn
     if (nullptr == stub) {
         return false;
     }
-    imageHarmony::GetImageByImageIdRequest getImageByImageIdRequest;
-    imageHarmony::GetImageByImageIdResponse getImageByImageIdResponse;
+    imageHarmony::GetImageByImageIdRequest request;
+    imageHarmony::GetImageByImageIdResponse response;
     grpc::ClientContext context;
 
-    getImageByImageIdRequest.set_connectid(connectId);
-    getImageByImageIdRequest.mutable_imagerequest()->set_imageid(imageInfo.imageId);
-    getImageByImageIdRequest.mutable_imagerequest()->set_format(imageInfo.format);
-    getImageByImageIdRequest.mutable_imagerequest()->mutable_params()->Add(cv::IMWRITE_JPEG_QUALITY);
-    getImageByImageIdRequest.mutable_imagerequest()->mutable_params()->Add(imageInfo.quality);
-    getImageByImageIdRequest.mutable_imagerequest()->set_expectedw(imageInfo.width);
-    getImageByImageIdRequest.mutable_imagerequest()->set_expectedh(imageInfo.height);
-    grpc::Status status = stub->getImageByImageId(&context, getImageByImageIdRequest, &getImageByImageIdResponse);
+    request.set_connectionid(connectionId);
+    request.mutable_imagerequest()->set_imageid(imageInfo.imageId);
+    request.mutable_imagerequest()->set_format(imageInfo.format);
+    request.mutable_imagerequest()->mutable_params()->Add(cv::IMWRITE_JPEG_QUALITY);
+    request.mutable_imagerequest()->mutable_params()->Add(imageInfo.quality);
+    request.mutable_imagerequest()->set_expectedw(imageInfo.width);
+    request.mutable_imagerequest()->set_expectedh(imageInfo.height);
+    grpc::Status status = stub->getImageByImageId(&context, request, &response);
     
     if (!status.ok()) {
         std::cout << "Error: " << status.error_code() << ": " << status.error_message() << std::endl;
         return false;
     }
     
-    auto response = getImageByImageIdResponse.response();
-    if (200 != response.code()) {
-        std::cout << response.code() << ": " << response.message() << std::endl;
+    auto customResponse = response.response();
+    if (200 != customResponse.code()) {
+        std::cout << customResponse.message() << std::endl;
         return false;
     }
     
-    imageIdOutput = getImageByImageIdResponse.imageresponse().imageid();
+    imageIdOutput = response.imageresponse().imageid();
 
     if (!imageIdOutput) {
         std::cout << "image ID is 0" << std::endl;
         return false;
     }
 
-    std::string buffer = getImageByImageIdResponse.imageresponse().buffer();
+    std::string buffer = response.imageresponse().buffer();
     std::vector<uint8_t> vecBuffer(buffer.begin(), buffer.end());
     cv::Mat image = cv::imdecode(vecBuffer, cv::IMREAD_COLOR);
     
