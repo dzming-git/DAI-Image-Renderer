@@ -13,10 +13,10 @@ ImageHarmonyClient::~ImageHarmonyClient() {
     }
 }
 
-bool ImageHarmonyClient::setAddress(std::string ip, std::string port) {
+bool ImageHarmonyClient::setAddress(std::string ip, int port) {
     if (shouldStop.load()) return false;
     // TODO 重置时未考虑线程安全
-    std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + port, grpc::InsecureChannelCredentials());
+    std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + std::to_string(port), grpc::InsecureChannelCredentials());
     std::unique_ptr<imageHarmony::Communicate::Stub> stubTmp = imageHarmony::Communicate::NewStub(channel);
     // 重置
     if (stub) {
@@ -34,11 +34,11 @@ bool ImageHarmonyClient::connectImageLoader(int64_t loaderArgsHash) {
     if (nullptr == stub) {
         return false;
     }
-    imageHarmony::ConnectImageTransServiceRequest request;
-    imageHarmony::ConnectImageTransServiceResponse response;
+    imageHarmony::ConnectImageLoaderRequest request;
+    imageHarmony::ConnectImageLoaderResponse response;
     grpc::ClientContext context;
     request.set_loaderargshash(loaderArgsHash);
-    grpc::Status status = stub->connectImageTransService(&context, request, &response);
+    grpc::Status status = stub->connectImageLoader(&context, request, &response);
     imageHarmony::CustomResponse customresponse = response.response();
     int32_t code = customresponse.code();
     if (200 != code) {
@@ -62,11 +62,11 @@ bool ImageHarmonyClient::disconnectImageLoader() {
     if (nullptr == stub) {
         return false;
     }
-    imageHarmony::DisconnectImageTransServiceRequest request;
-    imageHarmony::DisconnectImageTransServiceResponse response;
+    imageHarmony::DisconnectImageLoaderRequest request;
+    imageHarmony::DisconnectImageLoaderResponse response;
     grpc::ClientContext context;
     request.set_connectionid(connectionId);
-    grpc::Status status = stub->disconnectImageTransService(&context, request, &response);
+    grpc::Status status = stub->disconnectImageLoader(&context, request, &response);
     imageHarmony::CustomResponse customResponse = response.response();
     int32_t code = customResponse.code();
     if (200 != code) {

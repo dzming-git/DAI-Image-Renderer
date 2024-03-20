@@ -78,7 +78,7 @@ TaskManager::TaskInfo::~TaskInfo() {
 	}
 } 
 
-bool TaskManager::TaskInfo::initImageHarmony(std::string ip, std::string port, int64_t loaderArgsHash) {
+bool TaskManager::TaskInfo::initImageHarmony(std::string ip, int port, int64_t loaderArgsHash) {
 	// TODO 缺少输入合法性检测
 	isImageHarmonySet = true;
 	imageHarmonyIp = ip;
@@ -100,7 +100,7 @@ bool TaskManager::TaskInfo::initImageHarmony(std::string ip, std::string port, i
 	return true;
 }
 
-bool TaskManager::TaskInfo::initTargetDetection(std::string ip, std::string port) {
+bool TaskManager::TaskInfo::initTargetDetection(std::string ip, int port) {
 	// TODO 缺少输入合法性检测
 	isTargetDetectionSet = true;
 	targetDetectionIp = ip;
@@ -124,7 +124,7 @@ bool TaskManager::TaskInfo::initTargetDetection(std::string ip, std::string port
 	return true;
 }
 
-bool TaskManager::TaskInfo::initTargetTracking(std::string ip, std::string port) {
+bool TaskManager::TaskInfo::initTargetTracking(std::string ip, int port) {
 	// TODO 缺少输入合法性检测
 	isTargetTrackingSet = true;
 	targetTrackingIp = ip;
@@ -145,7 +145,7 @@ bool TaskManager::TaskInfo::initTargetTracking(std::string ip, std::string port)
 	return true;
 }
 
-bool TaskManager::TaskInfo::initBehaviorRecognition(std::string ip, std::string port) {
+bool TaskManager::TaskInfo::initBehaviorRecognition(std::string ip, int port) {
 	// TODO 缺少输入合法性检测
 	isBehaviorRecognitionSet = true;
 	behaviorRecognitionIp = ip;

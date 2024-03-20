@@ -32,7 +32,7 @@ public:
         int quality = 90;
     };
 
-    bool setAddress(std::string ip, std::string port);
+    bool setAddress(std::string ip, int port);
     bool connectImageLoader(int64_t loaderArgsHash);
     bool disconnectImageLoader();
     bool getImageByImageId(ImageHarmonyClient::ImageInfo imageInfo, int64_t& imageIdOutput, cv::Mat& imageOutput);

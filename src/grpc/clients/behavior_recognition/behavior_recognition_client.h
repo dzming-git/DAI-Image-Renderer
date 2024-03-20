@@ -34,7 +34,7 @@ public:
         double y2;
     };
 
-    bool setAddress(std::string ip, std::string port);
+    bool setAddress(std::string ip, int port);
     bool setTaskId(int64_t taskId);
     bool informImageId(int64_t imageId);
     bool getResultByImageId(int64_t imageId, std::vector<BehaviorRecognitionClient::Result>& results);

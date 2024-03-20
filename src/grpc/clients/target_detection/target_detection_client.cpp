@@ -15,10 +15,10 @@ TargetDetectionClient::~TargetDetectionClient() {
     }
 }
 
-bool TargetDetectionClient::setAddress(std::string ip, std::string port) {
+bool TargetDetectionClient::setAddress(std::string ip, int port) {
     if (shouldStop.load()) return false;
     // TODO 重置时未考虑线程安全
-    std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + port, grpc::InsecureChannelCredentials());
+    std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + std::to_string(port), grpc::InsecureChannelCredentials());
     std::unique_ptr<targetDetection::Communicate::Stub> stubTmp = targetDetection::Communicate::NewStub(channel);
     // 重置
     if (stub) {

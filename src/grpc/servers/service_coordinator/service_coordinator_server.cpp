@@ -32,7 +32,7 @@ grpc::Status ServiceCoordinatorServer::informPreviousServiceInfo(grpc::ServerCon
 
         std::string preServiceName = request->preservicename();
         std::string preServiceIp = request->preserviceip();
-        std::string preServicePort = request->preserviceport();
+        int preServicePort = request->preserviceport();
         if ("image harmony gRPC" == preServiceName) {
             if (args.find("LoaderArgsHash") == args.end()) {
                 throw std::runtime_error("LoaderArgsHash is not set.\n");

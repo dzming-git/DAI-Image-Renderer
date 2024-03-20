@@ -13,10 +13,10 @@ TargetTrackingClient::~TargetTrackingClient() {
     }
 }
 
-bool TargetTrackingClient::setAddress(std::string ip, std::string port) {
+bool TargetTrackingClient::setAddress(std::string ip, int port) {
     if (shouldStop.load()) return false;
     // TODO 重置时未考虑线程安全
-    std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + port, grpc::InsecureChannelCredentials());
+    std::shared_ptr<grpc::ChannelInterface> channel = grpc::CreateChannel(ip + ":" + std::to_string(port), grpc::InsecureChannelCredentials());
     std::unique_ptr<targetTracking::Communicate::Stub> stubTmp = targetTracking::Communicate::NewStub(channel);
     // 重置
     if (stub) {

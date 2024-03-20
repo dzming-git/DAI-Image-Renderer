@@ -42,10 +42,10 @@ class TaskManager::TaskInfo {
 public:
     TaskInfo(int64_t taskId);
     ~TaskInfo();
-    bool initImageHarmony(std::string ip, std::string port, int64_t loaderArgsHash);
-    bool initTargetDetection(std::string ip, std::string port);
-    bool initTargetTracking(std::string ip, std::string port);
-    bool initBehaviorRecognition(std::string ip, std::string port);
+    bool initImageHarmony(std::string ip, int port, int64_t loaderArgsHash);
+    bool initTargetDetection(std::string ip, int port);
+    bool initTargetTracking(std::string ip, int port);
+    bool initBehaviorRecognition(std::string ip, int port);
     bool setImageSize(int w, int h);
     bool addInterestLaebl(std::string label);
     bool init();
@@ -61,26 +61,26 @@ private:
     // imageHarmony必要
     bool isImageHarmonySet;
     std::string imageHarmonyIp;
-    std::string imageHarmonyPort;
+    int imageHarmonyPort;
     int64_t loaderArgsHash;
     ImageHarmonyClient* imageHarmonyClient;
     
     // 目标检测
     bool isTargetDetectionSet;
     std::string targetDetectionIp;
-    std::string targetDetectionPort;
+    int targetDetectionPort;
     TargetDetectionClient* targetDetectionClient;
 
     // 目标跟踪
     bool isTargetTrackingSet;
     std::string targetTrackingIp;
-    std::string targetTrackingPort;
+    int targetTrackingPort;
     TargetTrackingClient* targetTrackingClient;
 
     // 行为识别
     bool isBehaviorRecognitionSet;
     std::string behaviorRecognitionIp;
-    std::string behaviorRecognitionPort;
+    int behaviorRecognitionPort;
     BehaviorRecognitionClient* behaviorRecognitionClient;
 };
 
