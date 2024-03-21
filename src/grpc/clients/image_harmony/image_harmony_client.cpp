@@ -122,3 +122,43 @@ bool ImageHarmonyClient::getImageByImageId(ImageHarmonyClient::ImageInfo imageIn
     
     return true;
 }
+
+bool ImageHarmonyClient::getImageSize(ImageHarmonyClient::ImageInfo imageInfo, int64_t &imageIdOutput, int& width, int& height) {
+    if (shouldStop.load()) return false;
+    if (nullptr == stub) {
+        return false;
+    }
+    imageHarmony::GetImageByImageIdRequest request;
+    imageHarmony::GetImageByImageIdResponse response;
+    grpc::ClientContext context;
+
+    request.set_connectionid(connectionId);
+    request.mutable_imagerequest()->set_imageid(imageInfo.imageId);
+    request.mutable_imagerequest()->set_noimagebuffer(true);
+    request.mutable_imagerequest()->set_expectedw(imageInfo.width);
+    request.mutable_imagerequest()->set_expectedh(imageInfo.height);
+    grpc::Status status = stub->getImageByImageId(&context, request, &response);
+    
+    if (!status.ok()) {
+        std::cout << "Error: " << status.error_code() << ": " << status.error_message() << std::endl;
+        return false;
+    }
+    
+    auto customResponse = response.response();
+    if (200 != customResponse.code()) {
+        std::cout << customResponse.message() << std::endl;
+        return false;
+    }
+    
+    imageIdOutput = response.imageresponse().imageid();
+
+    if (!imageIdOutput) {
+        std::cout << "image ID is 0" << std::endl;
+        return false;
+    }
+
+    width = response.imageresponse().width();
+    height = response.imageresponse().height();
+
+    return true;
+}

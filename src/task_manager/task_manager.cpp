@@ -334,3 +334,11 @@ bool TaskManager::TaskInfo::getImage(ImageHarmonyClient::ImageInfo imageInfo, in
 	}
 	return true;
 }
+
+
+bool TaskManager::TaskInfo::getImageSize(ImageHarmonyClient::ImageInfo imageInfo, int64_t &imageIdOutput, int& width, int& height) {
+	if (!imageHarmonyClient->getImageSize(imageInfo, imageIdOutput, width, height)) {
+		return false;
+	}
+	return true;
+}

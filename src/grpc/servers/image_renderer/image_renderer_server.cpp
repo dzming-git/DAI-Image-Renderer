@@ -34,27 +34,39 @@ grpc::Status ImageRendererServer::getImageByImageId(grpc::ServerContext*, const 
         int expectedW = imageRequest.expectedw();
         int expectedH = imageRequest.expectedh();
         response->mutable_imageresponse()->set_imageid(0);
-        cv::Mat image;
         ImageHarmonyClient::ImageInfo imageInfo;
         imageInfo.height = expectedH;
         imageInfo.width = expectedW;
         imageInfo.imageId = imageId;
-        if (!taskInfo->getImage(imageInfo, imageId, image)) {
-            throw std::runtime_error("Failed to get image. Task ID: " + std::to_string(taskId) + "\n");
+        if (!noImageBuffer) {
+            cv::Mat image;
+            if (!taskInfo->getImage(imageInfo, imageId, image)) {
+                throw std::runtime_error("Failed to get image. Task ID: " + std::to_string(taskId) + "\n");
+            }
+            response->mutable_imageresponse()->set_imageid(imageId);
+            response->mutable_imageresponse()->set_height(image.rows);
+            response->mutable_imageresponse()->set_width(image.cols);
+            // 无参数时，默认使用 .jpg 无损压缩
+            if (0 == format.size()) {
+                format = ".jpg";
+                params = {cv::IMWRITE_PNG_COMPRESSION, 100};
+            }
+            std::vector<uchar> buf;
+            // TODO: 在这里压缩图像会有一些性能冗余
+            cv::imencode(format, image, buf, params);
+            size_t bufSize = buf.size();
+            response->mutable_imageresponse()->set_buffer(&buf[0], buf.size());
         }
-        response->mutable_imageresponse()->set_imageid(imageId);
-        response->mutable_imageresponse()->set_height(image.rows);
-        response->mutable_imageresponse()->set_width(image.cols);
-        // 无参数时，默认使用 .jpg 无损压缩
-        if (0 == format.size()) {
-            format = ".jpg";
-            params = {cv::IMWRITE_PNG_COMPRESSION, 100};
+        else {
+            int width = 0;
+            int height = 0;
+            if (!taskInfo->getImageSize(imageInfo, imageId, width, height)) {
+                throw std::runtime_error("Failed to get image size. Task ID: " + std::to_string(taskId) + "\n");
+            }
+            response->mutable_imageresponse()->set_imageid(imageId);
+            response->mutable_imageresponse()->set_height(height);
+            response->mutable_imageresponse()->set_width(width);
         }
-        std::vector<uchar> buf;
-        // TODO: 在这里压缩图像会有一些性能冗余
-        cv::imencode(format, image, buf, params);
-        size_t bufSize = buf.size();
-        response->mutable_imageresponse()->set_buffer(&buf[0], buf.size());
     } catch (const std::exception& e) {
         responseCode = 400;
         responseMessage += e.what();

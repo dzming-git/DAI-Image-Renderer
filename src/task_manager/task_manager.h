@@ -50,6 +50,7 @@ public:
     bool addInterestLaebl(std::string label);
     bool init();
     bool getImage(ImageHarmonyClient::ImageInfo imageInfo, int64_t &imageIdOutput, cv::Mat &imageOutput);
+    bool getImageSize(ImageHarmonyClient::ImageInfo imageInfo, int64_t &imageIdOutput, int& width, int& height);
 private:
     int64_t taskId;
 
