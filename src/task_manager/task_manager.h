@@ -15,6 +15,7 @@
 
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include "grpc/clients/image_harmony/image_harmony_client.h"
 #include "grpc/clients/target_detection/target_detection_client.h"
 #include "grpc/clients/target_tracking/target_tracking_client.h"
