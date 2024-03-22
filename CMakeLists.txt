@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD 20)
 # 子模块
 add_subdirectory(src/config)
 add_subdirectory(src/consul)
+add_subdirectory(src/grpc/clients)
 add_subdirectory(resources/protos)
 
 # 可执行程序的输出目录
@@ -33,14 +34,6 @@ set(SOURCES
     main.cpp
     src/utils/random_utils.h
     src/utils/random_utils.cpp
-    src/grpc/clients/image_harmony/image_harmony_client.h
-    src/grpc/clients/image_harmony/image_harmony_client.cpp
-    src/grpc/clients/target_detection/target_detection_client.h
-    src/grpc/clients/target_detection/target_detection_client.cpp
-    src/grpc/clients/target_tracking/target_tracking_client.h
-    src/grpc/clients/target_tracking/target_tracking_client.cpp
-    src/grpc/clients/behavior_recognition/behavior_recognition_client.h
-    src/grpc/clients/behavior_recognition/behavior_recognition_client.cpp
     src/grpc/servers/service_coordinator/service_coordinator_server.h
     src/grpc/servers/service_coordinator/service_coordinator_server.cpp
     src/grpc/servers/image_renderer/image_renderer_server.h
@@ -67,6 +60,10 @@ target_link_libraries(${PROJECT_NAME}
   image_renderer_data_grpc_proto
   target_tracking_data_grpc_proto
   behavior_recognition_data_grpc_proto
+  image_harmony_client
+  target_detection_client
+  target_tracking_client
+  behavior_recognition_client
   )
 
 # OpenCV
